@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 showMessage('Access Denied: You are not authorized to view this page.', true);
                 setTimeout(() => {
-                    window.location.replace('/dashboard.html'); // Use replace for immediate redirection
+                    window.location.replace('/signin.html'); // Use replace for immediate redirection
                 }, 1500);
             }
         } catch (error) {

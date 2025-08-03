@@ -1,16 +1,27 @@
 const sql = require("mssql");
 const dbConfig = require("../dbConfig");
 
-// Get all users (existing function)
+// Get all users (existing function) - UPDATED to include profile data
 async function getAllUsers(){
     let connection;
     try {
         connection = await sql.connect(dbConfig);
-        const query = `SELECT user_id, username, email, role FROM Users`; // Explicitly select user_id
+        // Modified query to JOIN with Profiles table and select name and age
+        const query = `
+            SELECT
+                U.user_id,
+                U.username,
+                U.email,
+                U.role,
+                P.name,    -- Select name from Profiles table
+                P.age      -- Select age from Profiles table
+            FROM Users AS U
+            LEFT JOIN Profiles AS P ON U.user_id = P.user_id;
+        `;
         const result = await connection.request().query(query);
         return result.recordset;
     }catch(error){
-        console.error("Database error: ", error);
+        console.error("Database error in getAllUsers: ", error); // Added specific error message
         throw error;
     }finally{
         if (connection){
@@ -39,7 +50,7 @@ async function getUserByUsername(username){
 
         return result.recordset[0];
     }catch(error){
-        console.error("Database error: ",  error);
+        console.error("Database error in getUserByUsername: ",  error); // Added specific error message
         throw error;
     }finally{
         if(connection){
@@ -72,7 +83,7 @@ async function createUser(userData){
         // Fetch the complete user object using the new user_id
         return await getUserByUsername(userData.username); // Re-fetch the user to get all details including user_id
     }catch(error){
-        console.error("Database error: ", error);
+        console.error("Database error in createUser: ", error); // Added specific error message
         throw error;
     }finally{
         if (connection){
@@ -97,7 +108,7 @@ async function deleteUserById(user_id){ // Parameter name changed to user_id
 
         return result.rowsAffected > 0; // Indicate success based on affected rows
     }catch(error){
-        console.error("Database error: ", error);
+        console.error("Database error in deleteUserById: ", error); // Added specific error message
         throw error;
     }finally{
         if(connection){
@@ -126,7 +137,7 @@ async function addRevokedToken(token, expirationDate) {
         await request.query(query);
         return true;
     } catch (error) {
-        console.error("Database error adding revoked token: ", error);
+        console.error("Database error in addRevokedToken: ", error); // Added specific error message
         throw error;
     } finally {
         if (connection) {
@@ -154,7 +165,7 @@ async function isTokenRevoked(token) {
         const result = await request.query(query);
         return result.recordset[0].count > 0;
     } catch (error) {
-        console.error("Database error checking revoked token: ", error);
+        console.error("Database error in isTokenRevoked: ", error); // Added specific error message
         throw error;
     } finally {
         if (connection) {
