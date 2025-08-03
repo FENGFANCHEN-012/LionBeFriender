@@ -56,6 +56,9 @@ function verifyJWT(req, res, next){
             "PUT /profiles/me": ["member", "admin"],
             "POST /users/logout": ["member", "admin"],
             "POST /translate": ["member", "admin"],
+             //
+              
+            
         };
 
         const requestedEndpoint = `${req.method} ${req.path}`;

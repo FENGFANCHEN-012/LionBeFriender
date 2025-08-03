@@ -44,6 +44,8 @@ CREATE TABLE Profiles (
     FOREIGN KEY (user_id) REFERENCES Users(user_id)
 );
 
+
+
 -- RevokedTokens Table
 CREATE TABLE RevokedTokens (
     token_id NVARCHAR(255) PRIMARY KEY,
@@ -146,16 +148,21 @@ CREATE TABLE UserFriends (
 
 -- Event Table
 CREATE TABLE Event (
-    event_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+
+   event_id INT IDENTITY(1,1) PRIMARY KEY,  
+   external_id VARCHAR(255) UNIQUE ,
     name VARCHAR(255) NOT NULL,
     location VARCHAR(255),
-    time DATETIME,
+    time DATETIME,                      
     description TEXT,
-    image NVARCHAR(MAX),
-    fee VARCHAR(50),
-    type VARCHAR(100),
-    detail VARCHAR(100),
-    photo TEXT
+    image NVARCHAR(MAX),       
+	 start DATETIME NOT NULL,
+    [end] DATETIME NOT NULL,
+    url NVARCHAR(255),
+    status NVARCHAR(50) NOT NULL,
+    fee VARCHAR(50),                 
+    type VARCHAR(100),  
+   
 );
 
 -- event_signup Table

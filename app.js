@@ -36,6 +36,34 @@ const videoCtrl   = require('./controllers/videoTaskController');
 const medController = require("./controllers/managemed_Controller");
 const { validateMedication, validateId } = require("./middlewares/managemed_middleware");
 //-----------------------------------------------------------------------------------------------
+//fengfan controller
+
+const UserProfileController = require("./controllers/fengfan_folder/user_profile_controller")
+const EventController = require("./controllers/fengfan_folder/event_controller.js");
+const groupController = require("./controllers/fengfan_folder/group_controller.js");
+const friendController = require("./controllers/fengfan_folder/friend_controller.js");
+const chatController = require("./controllers/fengfan_folder/chat_controller.js");
+const groupChatController = require("./controllers/fengfan_folder/group_chat_controller.js");
+const mailboxController = require('./controllers/fengfan_folder/message_controller.js'); 
+
+//const { 
+ // fetchCategories,
+  //fetchAndSyncOrgEvents,
+  //getEventsByCategory 
+//} = require('./src/controllers/eventbriteController');
+
+const eventbriteController = require('./controllers/fengfan_folder/eventbriteController.js');
+
+//-----------------------------------------------------------------------------------------------
+
+// fengfan middleware
+const {
+  validateSendMessage,
+  validateChatHistoryParams
+} = require('./middlewares/chat_middleware.js');
+const validateFriend = require('./middlewares/friend_middleware.js');
+const validateUpdateGroup = require('./middlewares/group_middleware.js');
+//-----------------------------------------------------------------------------------------------
 
 
 const app = express();
@@ -164,7 +192,56 @@ app.post("/medications", validateMedication, medController.createMedication);
 app.delete("/medications/:id", medController.deleteMedicationById);
 app.put("/medications/:id", medController.updateMedicationById);
 //-----------------------------------------------------------------------------------------------
+// fengfan route 
+// user
+app.get("/profiles/recommended/:user_id", UserProfileController.getRecommendedProfiles);
+app.get("/profile/:user_id",UserProfileController.getInfo)
+app.put("/profile/:user_id",UserProfileController.updateHobby)
+// event
+// event brite
+app.get('/eventbrite/events', eventbriteController.fetchAndSyncOrgEvents);
+app.get("/user/event/:user_id" ,EventController.getUserEvent);
+app.get("/event/:event_id", EventController.getEventDetails);
+app.get("/getEvent", EventController.fetchEvent);
+app.post("/user_event", EventController.signUpEvent); // Endpoint to sign up for an event
+app.delete("/user_event", EventController.cancelEvent);// Endpoint to cancel an event
+app.get('/events/status', EventController.checkUserEventStatus); // Endpoint to check user event status
+// group
+app.get("/group/:user_id", groupController.getUserGroups);
+app.get("/detail/group/:group_id",groupController.getgroupById)
 
+// add group member
+app.post('/group-members', groupController.addGroupMember);
+app.post('/group-owner', groupController.addGroupOwner);
+app.get("/member/:group_id", groupController.getGroupMember)
+app.get("/member/detail/:user_id", groupController.getMemberDetail);
+app.get("/group/:group_id/members/profile", groupController.getGroupMemberProfiles);
+app.delete("/group/:group_id",groupController.deleteGroup)
+app.put("/group/:group_id",validateUpdateGroup, groupController.updateGroup);
+app.post('/create/groups', groupController.createGroup);
+
+
+// friend
+app.get('/friends/:user_id', friendController.getFriend);
+app.delete('/friends/:user_id/:friend_id',friendController.removeFriend);
+app.get('/friends/:user_id/:friend_id', friendController.getFriendInfo);
+app.post('/friends/:user_id/:friend_id',friendController.addFriend);
+app.put('/friends/:user_id/:friend_id', friendController.updateFriendInfo);
+
+// chat
+app.get('/private-chat/:senderId/:receiverId',validateChatHistoryParams, chatController.getChatHistory);
+app.post('/private-chat',validateSendMessage, chatController.sendMessage);
+
+
+// group chat
+app.get('/group-chat/:groupId', groupChatController.getGroupChatHistory);
+app.post('/group-chat/send',groupChatController.sendGroupMessage);
+app.get('/group-info/:groupId', groupChatController.getGroupInfo);
+app.get('/group-members/:groupId', groupChatController.getGroupMembers);
+// message
+app.get('/mailbox/:user_id', mailboxController.getMailboxMessages);
+
+//-----------------------------------------------------------------------------------------------
 
 // Graceful shutdown
 process.on("SIGINT", async () => {

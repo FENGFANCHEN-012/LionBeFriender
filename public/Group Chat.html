@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Group Chat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 30px;
+      color: #193c78;
+      font-size: 28px;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      background-color: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      height: 92vh;
+    }
+    .header {
+      background-color: #193c78;
+      color: white;
+      padding: 30px;
+      border-radius: 16px 16px 0 0;
+      font-size: 36px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 25px;
+      user-select: none;
+    }
+    .chat-body {
+      flex: 1;
+      overflow-y: auto;
+      background-color: #e4f2ff;
+      border-radius: 16px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      font-size: 28px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 28px 36px;
+      border-radius: 30px;
+      line-height: 1.5;
+      word-wrap: break-word;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      user-select: text;
+    }
+    .message.received {
+      background-color: #d0d9ff;
+      color: #000;
+      align-self: flex-start;
+      border-top-left-radius: 0;
+      flex-direction: row;
+    }
+    .message.sent {
+      background-color: #193c78;
+      color: white;
+      align-self: flex-end;
+      border-top-right-radius: 0;
+      flex-direction: row-reverse;
+    }
+    .avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 3px solid #193c78;
+      user-select: none;
+    }
+    .message .name {
+      font-weight: bold;
+      font-size: 32px;
+      min-width: 120px;
+      user-select: text;
+    }
+    .message .text {
+      flex: 1;
+    }
+    .keyboard-container {
+      margin-top: 25px;
+      display: flex;
+      gap: 20px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .keyboard-container input {
+      flex: 1;
+      font-size: 32px;
+      padding: 18px 24px;
+      border-radius: 30px;
+      border: 2px solid #193c78;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    .keyboard-container input:focus {
+      border-color: #265bb8;
+      box-shadow: 0 0 12px rgba(37,91,184,0.6);
+    }
+    .keyboard-container button {
+      font-size: 36px;
+      font-weight: bold;
+      padding: 18px 44px;
+      border-radius: 30px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .keyboard-container button.send {
+      background-color: #193c78;
+      color: white;
+    }
+    .keyboard-container button.send:hover {
+      background-color: #0f2855;
+    }
+    .keyboard-container button.cancel {
+      background-color: #f44336;
+      color: white;
+    }
+    .keyboard-container button.cancel:hover {
+      background-color: #b93125;
+    }
+    @media (max-width: 768px) {
+      .container {
+        max-width: 100%;
+        height: 95vh;
+        padding: 20px;
+      }
+      .header {
+        font-size: 32px;
+        padding: 25px;
+      }
+      .chat-body {
+        font-size: 26px;
+        padding: 25px;
+        gap: 24px;
+      }
+      .message {
+        max-width: 90%;
+        padding: 24px 30px;
+        gap: 18px;
+        border-radius: 24px;
+      }
+      .message .name {
+        font-size: 28px;
+        min-width: 100px;
+      }
+      .avatar {
+        width: 60px;
+        height: 60px;
+      }
+      .keyboard-container input {
+        font-size: 28px;
+        padding: 16px 20px;
+      }
+      .keyboard-container button {
+        font-size: 32px;
+        padding: 16px 36px;
+      }
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="social-nav.css">
+  <style>
+    .zenith-navbar {
+  background-color: #2c3e50;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 0.8rem 1rem;
+}
+
+/* Brand/Logo */
+.aurora-brand {
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.nebula-logo {
+  height: 40px;
+  width: auto;
+}
+
+.aurora-brand:hover {
+  transform: translateY(-2px);
+}
+
+/* Navigation Links */
+.pulsar-links {
+  gap: 1.5rem;
+  margin-left: 2rem;
+}
+
+.pulsar-links .nav-link {
+  color: #ecf0f1 !important;
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.photon-icon {
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.orbit-text {
+  position: relative;
+}
+
+.orbit-text::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #3498db;
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover .orbit-text::after,
+.nova-active .orbit-text::after {
+  width: 100%;
+}
+
+.nav-link:hover .photon-icon {
+  transform: scale(1.1);
+}
+
+.nova-active {
+  background-color: rgba(52, 152, 219, 0.1) !important;
+}
+
+/* Mobile Toggler */
+.quantum-toggler {
+  border-color: rgba(236, 240, 241, 0.3);
+  padding: 0.25rem 0.5rem;
+}
+
+.cosmos-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba(236, 240, 241, 0.8)' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .pulsar-links {
+    margin-left: 0;
+    margin-top: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .pulsar-links .nav-link {
+    padding: 0.75rem 1rem;
+  }
+  
+  .orbit-text::after {
+    bottom: -2px;
+  }
+}
+  </style>
+</head>
+<body>
+  
+  <div class="container" role="main">
+     <nav class="zenith-navbar navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="aurora-brand" href="./index.html">
+        <img src="./images/logo.png" alt="App Logo" class="nebula-logo">
+      </a>
+      
+      <button class="quantum-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#stellarNav">
+        <span class="cosmos-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="stellarNav">
+        <ul class="navbar-nav pulsar-links">
+          <li class="nav-item">
+            <a class="nav-link nova-active" href="users_event.html">
+              <i class="fas fa-calendar-alt photon-icon"></i>
+              <span class="orbit-text">Events</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link" href="Friend-management.html">
+              <i class="fas fa-user-friends photon-icon"></i>
+              <span class="orbit-text">Friends</span>
+            </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link" href="Group-management.html">
+              <i class="fas fa-users photon-icon"></i>
+              <span class="orbit-text">Groups</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+    <div class="header" aria-label="Chat header" id="groupName">Loading...</div>
+    <div class="chat-body" id="chatBody" aria-live="polite" aria-relevant="additions"></div>
+    <div class="keyboard-container">
+      <input type="text" id="messageInput" aria-label="Type your message" placeholder="Type a message..." />
+      <button class="send" id="sendBtn" aria-label="Send message">Send</button>
+      <button class="cancel" id="cancelBtn" aria-label="Cancel input">Cancel</button>
+    </div>
+  </div>
+  <script src="group_chat_management.js"></script>
+  <script src="translation.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
