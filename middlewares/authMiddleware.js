@@ -26,24 +26,35 @@ function verifyJWT(req, res, next){
 
         // Check user role for authorization
         const authorizedRoles = {
-            // Public registration (handled by app.post("/users") - no JWT needed for this specific route)
-            // This middleware won't run for the public POST /users route.
+            // Video task endpoints
+            "GET /video-tasks": ["member", "admin"],
+            "GET /video-tasks/[0-9]+": ["member", "admin"],     // :task_id as regex
+            "POST /video-watches": ["admin"],
 
-            // Admin-only user creation
+            // Points endpoints
+            "GET /points": ["member", "admin"],
+            "PUT /points": ["member", "admin"],
+
+            // Cart & redemption
+            "GET /cart": ["member"],
+            "POST /cart": ["member"],
+            "PUT /cart/[0-9]+": ["member"],           // :cart_id as regex
+            "DELETE /cart/[0-9]+": ["member"],        // :cart_id as regex
+
+            // Checkout
+            "POST /cart/checkout": ["member"],
+
+            // History
+            "GET /history": ["member", "admin"],
+            "POST /history": ["member"],
+
+            // (existing admin/member routes)
             "POST /users/admin-register": ["admin"], // Only admins can create users with specified roles
-
-            // User management routes (protected by JWT)
             "GET /users/profiles": ["admin"], // Only admin can view all user profiles
             "DELETE /users/profiles/[0-9]+": ["admin"], // Only admin can delete user profiles
-
-            // Routes for a logged-in user to manage their OWN profile
             "GET /profiles/me": ["member", "admin"],
             "PUT /profiles/me": ["member", "admin"],
-
-            // Logout route
-            "POST /users/logout": ["member", "admin"], // Allow both roles to logout
-
-            // NEW: Translation Endpoint - Allow both member and admin roles
+            "POST /users/logout": ["member", "admin"],
             "POST /translate": ["member", "admin"],
         };
 

@@ -128,26 +128,27 @@ app.delete('/api/alerts', weatherController.deleteAllUserAlerts);
 //------------------------------------------------------------------------------------------------------------------------------
 // Ryan-----------------------------------------------------------------------------------------------------
 // 1) Video‑points endpoints
-app.get ( '/video-tasks',          videoCtrl.listTasks );
-app.get ( '/video-tasks/:task_id', videoCtrl.getTask );
-app.post( '/video-watches',        videoCtrl.completeTask );
+app.get ( '/video-tasks',          verifyJWT, videoCtrl.listTasks );
+app.get ( '/video-tasks/:task_id', verifyJWT, videoCtrl.getTask );
+app.post( '/video-watches',        verifyJWT, videoCtrl.completeTask );
 
 // 2) Points endpoints
-app.get ( '/points', ptsCtrl.getPoints );
-app.put ( '/points', ptsCtrl.addPoints );
+app.get ( '/points', verifyJWT, ptsCtrl.getPoints );
+app.put ( '/points', verifyJWT, ptsCtrl.addPoints );
 
 // 3) Cart & redemption
-app.get    ( '/cart',          cartCtrl.viewCart );
-app.post   ( '/cart',          cartCtrl.addToCart );
-app.put    ( '/cart/:cart_id', cartCtrl.editCart );
-app.delete ( '/cart/:cart_id', cartCtrl.removeFromCart );
+app.get    ( '/cart',          verifyJWT, cartCtrl.viewCart );
+app.post   ( '/cart',          verifyJWT, cartCtrl.addToCart );
+app.put    ( '/cart/:cart_id', verifyJWT, cartCtrl.editCart );
+app.delete ( '/cart/:cart_id', verifyJWT, cartCtrl.removeFromCart );
 
 // 4) Checkout
-app.post('/cart/checkout', cartCtrl.checkout);
+app.post('/cart/checkout', verifyJWT, cartCtrl.checkout);
 
 // 5) History
-app.get ( '/history', historyCtrl.getHistory );
-app.post( '/history', historyCtrl.logHistory );
+app.get ( '/history', verifyJWT, historyCtrl.getHistory );
+app.post( '/history', verifyJWT, historyCtrl.logHistory );
+
 //------------------------------------------------------------------------------------------------------------------------------
 //zq 
 

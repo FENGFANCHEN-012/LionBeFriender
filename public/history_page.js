@@ -1,11 +1,18 @@
 // public/js/history_page.js
-const USER_ID = 1;
-const API_BASE = '/api';
+
+function getJWT() {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    window.location.href = '/signin.html';
+    throw new Error('Not logged in');
+  }
+  return token;
+}
 
 async function fetchHistory() {
   try {
-    const res = await fetch(`${API_BASE}/history`, {
-      headers: { 'x-user-id': USER_ID }
+    const res = await fetch('/history', {
+      headers: { Authorization: `Bearer ${getJWT()}` }
     });
     if (!res.ok) throw new Error('Failed to fetch history');
 

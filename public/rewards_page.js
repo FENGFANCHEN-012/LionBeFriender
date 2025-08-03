@@ -1,16 +1,26 @@
 // public/js/rewards_page.js
 
-const USER_ID = 1;
-const API_BASE = '/api';
+function getJWT() {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    window.location.href = '/signin.html';
+    throw new Error('Not logged in');
+  }
+  return token;
+}
 
 async function fetchPoints() {
-  const res = await fetch(`${API_BASE}/points`, { headers: { 'x-user-id': USER_ID } });
+  const res = await fetch('/points', {
+    headers: { Authorization: `Bearer ${getJWT()}` }
+  });
   const { points } = await res.json();
   document.getElementById('user-points').innerHTML = `<span>${points}</span>`;
 }
 
 async function fetchCart() {
-  const res = await fetch(`${API_BASE}/cart`, { headers: { 'x-user-id': USER_ID } });
+  const res = await fetch('/cart', {
+    headers: { Authorization: `Bearer ${getJWT()}` }
+  });
   const { cart } = await res.json();
   const listEl = document.getElementById('cart-list');
   listEl.innerHTML = '';
@@ -30,18 +40,21 @@ async function fetchCart() {
 }
 
 async function addToCart(voucherId) {
-  await fetch(`${API_BASE}/cart`, {
+  await fetch('/cart', {
     method: 'POST',
-    headers: { 'x-user-id': USER_ID, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${getJWT()}`,
+      'Content-Type': 'application/json'
+    },
     body: JSON.stringify({ voucher_id: voucherId, quantity: 1 })
   });
   fetchCart();
 }
 
 async function removeFromCart(cartId) {
-  await fetch(`${API_BASE}/cart/${cartId}`, {
+  await fetch(`/cart/${cartId}`, {
     method: 'DELETE',
-    headers: { 'x-user-id': USER_ID }
+    headers: { Authorization: `Bearer ${getJWT()}` }
   });
   fetchCart();
 }

@@ -1,10 +1,17 @@
 // public/js/redemption_page.js
-const USER_ID = 1;
-const API_BASE = '/api';
+
+function getJWT() {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    window.location.href = '/signin.html';
+    throw new Error('Not logged in');
+  }
+  return token;
+}
 
 async function fetchCart() {
-  const res = await fetch(`${API_BASE}/cart`, {
-    headers: { 'x-user-id': USER_ID }
+  const res = await fetch('/cart', {
+    headers: { Authorization: `Bearer ${getJWT()}` }
   });
   const { cart } = await res.json();
   const listEl = document.getElementById('cart-list');
@@ -55,10 +62,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 // on confirm click
 document.getElementById('confirmBtn').addEventListener('click', async () => {
   try {
-    //Checkout API
-    const res = await fetch(`${API_BASE}/cart/checkout`, {
+    // Checkout API
+    const res = await fetch('/cart/checkout', {
       method: 'POST',
-      headers: { 'x-user-id': USER_ID }
+      headers: { Authorization: `Bearer ${getJWT()}` }
     });
     if (!res.ok) throw new Error('Checkout failed');
 

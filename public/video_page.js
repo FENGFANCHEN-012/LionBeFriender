@@ -1,6 +1,14 @@
 // public/js/video_page.js
 
-const USER_ID = 1;
+function getJWT() {
+  const token = localStorage.getItem('jwtToken');
+  if (!token) {
+    window.location.href = '/signin.html';
+    throw new Error('Not logged in');
+  }
+  return token;
+}
+
 let player;
 let videoFinished = false;
 let currentPointValue = 0;
@@ -14,8 +22,8 @@ function onYouTubeIframeAPIReady() {
     return;
   }
 
-  fetch(`/api/video-tasks/${taskId}`, {
-    headers: { 'x-user-id': USER_ID }
+  fetch(`/video-tasks/${taskId}`, {
+    headers: { Authorization: `Bearer ${getJWT()}` }
   })
     .then(r => {
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -61,10 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // record the watch
-      const watchRes = await fetch('/api/video-watches', {
+      const watchRes = await fetch('/video-watches', {
         method: 'POST',
         headers: {
-          'x-user-id':    USER_ID,
+          Authorization: `Bearer ${getJWT()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ task_id: taskId })
@@ -72,10 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!watchRes.ok) throw new Error('Watch logging failed');
 
       // award the points
-      const ptsRes = await fetch('/api/points', {
+      const ptsRes = await fetch('/points', {
         method: 'PUT',
         headers: {
-          'x-user-id':    USER_ID,
+          Authorization: `Bearer ${getJWT()}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ delta: currentPointValue })
