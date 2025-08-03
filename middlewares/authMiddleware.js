@@ -13,6 +13,9 @@ function verifyJWT(req, res, next){
             return res.status(403).json({message: "Forbidden"});
         }
 
+        // DEBUG: Log decoded JWT payload
+        console.log("Decoded JWT payload:", decoded);
+
         // Check if the token is blacklisted
         try {
             const revoked = await userModel.isTokenRevoked(token);
@@ -29,7 +32,7 @@ function verifyJWT(req, res, next){
             // Video task endpoints
             "GET /video-tasks": ["member", "admin"],
             "GET /video-tasks/[0-9]+": ["member", "admin"],     // :task_id as regex
-            "POST /video-watches": ["admin"],
+            "POST /video-watches": ["member","admin"],
 
             // Points endpoints
             "GET /points": ["member", "admin"],
@@ -57,8 +60,6 @@ function verifyJWT(req, res, next){
             "POST /users/logout": ["member", "admin"],
             "POST /translate": ["member", "admin"],
              //
-              
-            
         };
 
         const requestedEndpoint = `${req.method} ${req.path}`;

@@ -1,4 +1,3 @@
-// controllers/cartController.js
 const sql     = require('mssql');
 const config  = require('../dbConfig');
 const Cart    = require('../models/cart_model');
@@ -7,7 +6,7 @@ const History = require('../models/history_model');
 
 exports.viewCart = async (req, res, next) => {
   try {
-    const cart = await Cart.getCart(req.user.id);
+    const cart = await Cart.getCart(req.user.user_id);
     res.json({ cart });
   } catch (err) {
     next(err);
@@ -17,7 +16,7 @@ exports.viewCart = async (req, res, next) => {
 exports.addToCart = async (req, res, next) => {
   try {
     const { voucher_id, quantity } = req.body;
-    await Cart.addItem(req.user.id, voucher_id, quantity || 1);
+    await Cart.addItem(req.user.user_id, voucher_id, quantity || 1);
     res.status(201).json({ msg: 'Added to cart' });
   } catch (err) {
     next(err);
@@ -47,21 +46,21 @@ exports.removeFromCart = async (req, res, next) => {
 exports.checkout = async (req, res, next) => {
   let pool;
   try {
-    console.log('🔄 Starting checkout for user', req.user.id);
+    console.log('🔄 Starting checkout for user', req.user.user_id);
     pool = await new sql.ConnectionPool(config).connect();
     console.log('✔️  Connected to DB, beginning transaction');
     const transaction = new sql.Transaction(pool);
     await transaction.begin();
 
     console.log('📦  Fetching cart items…');
-    const cart = await Cart.getCart(req.user.id);
+    const cart = await Cart.getCart(req.user.user_id);
     console.log('📦  Cart contents:', cart);
 
     const totalCost = cart.reduce((sum, i) => sum + i.cost_points * i.quantity, 0);
     console.log(`💰  Total cost calculated: ${totalCost}`);
 
     console.log('➖ Deducting points…');
-    await Points.deductPoints(req.user.id, totalCost, transaction);
+    await Points.deductPoints(req.user.user_id, totalCost, transaction);
     console.log('➖ Points deducted');
 
     console.log('➕ Inserting redeemed vouchers…');
@@ -69,7 +68,7 @@ exports.checkout = async (req, res, next) => {
       console.log('   • inserting voucher', item.voucher_id, 'qty', item.quantity);
       const insertReq = transaction.request();
       await insertReq
-        .input('user_id',    sql.Int, req.user.id)
+        .input('user_id',    sql.Int, req.user.user_id)
         .input('voucher_id', sql.Int, item.voucher_id)
         .input('qty',        sql.Int, item.quantity)
         .query(`
@@ -83,7 +82,7 @@ exports.checkout = async (req, res, next) => {
       console.log('   • history entry', item.voucher_id, 'qty', item.quantity);
       const histReq = transaction.request();
       await histReq
-        .input('user_id',       sql.Int,           req.user.id)
+        .input('user_id',       sql.Int,           req.user.user_id)
         .input('voucher_id',    sql.Int,           item.voucher_id)
         .input('voucher_title', sql.NVarChar(100), item.title)
         .input('quantity',      sql.Int,           item.quantity)
@@ -97,7 +96,7 @@ exports.checkout = async (req, res, next) => {
     console.log('📝 History logged');
 
     console.log('🧹 Clearing cart…');
-    await Cart.clearCart(req.user.id, transaction);
+    await Cart.clearCart(req.user.user_id, transaction);
     console.log('🧹 Cart cleared');
 
     await transaction.commit();
