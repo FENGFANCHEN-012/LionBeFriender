@@ -1,16 +1,57 @@
-//////// correct version
-
-
-
-
 const eventbriteService = require('../../public/eventbrite');
 const eventbriteModel = require('../../models/fengfan_folder/eventbriteModel');
 
+/**
+ * @swagger
+ * /eventbrite/events:
+ *   get:
+ *     summary: Fetch and sync events from Eventbrite for a given organization
+ *     tags: [Eventbrite]
+ *     parameters:
+ *       - in: query
+ *         name: orgId
+ *         schema:
+ *           type: string
+ *         description: Eventbrite organization ID (optional, defaults to first organization)
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           default: live
+ *         description: Event status (e.g. live, draft)
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of events to fetch per page
+ *     responses:
+ *       200:
+ *         description: Successfully synced events from Eventbrite
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 count:
+ *                   type: integer
+ *                 events:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       404:
+ *         description: No organizations found for this account
+ *       500:
+ *         description: Failed to sync events from Eventbrite
+ */
 async function fetchAndSyncOrgEvents(req, res) {
   const { orgId, status, pageSize } = req.query;
 
   try {
-  
     let organizationId = orgId;
     if (!organizationId) {
       const organizations = await eventbriteService.fetchMyOrganizations();
@@ -60,6 +101,42 @@ async function fetchAndSyncOrgEvents(req, res) {
   }
 }
 
+/**
+ * @swagger
+ * /eventbrite/all:
+ *   get:
+ *     summary: Retrieve all synced events from the local database
+ *     tags: [Eventbrite]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by event status
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filter by event type
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved events
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 events:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Failed to retrieve events
+ */
 async function getEvents(req, res) {
   const { status, type } = req.query;
 

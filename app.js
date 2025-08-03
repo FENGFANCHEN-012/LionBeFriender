@@ -2,8 +2,43 @@ require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const sql = require("mssql");
-const cors = require("cors"); // Ensure cors is imported
+const cors = require("cors");
 const dbConfig = require("./dbConfig");
+
+// -------------------- Swagger Setup Start --------------------
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsdoc = require("swagger-jsdoc");
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Lions Befrienders API",
+      version: "1.0.0",
+      description: "API documentation for the Lions Befrienders platform",
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+      },
+    ],
+  },
+  // Point to all controllers for auto doc generation:
+  apis: [
+    "./controllers/*.js",
+    "./controllers/fengfan_folder/*.js",
+    "./controllers/*.js",
+  ],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+const swaggerUiOpts = {
+  customSiteTitle: "Lions Befrienders API Docs",
+};
+const app = express();
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOpts));
+// -------------------- Swagger Setup End --------------------
 
 // for eventbrite API (if used)
 // const { syncEvents } = require('./src/eventbrite-sync');
@@ -65,13 +100,11 @@ const validateFriend = require('./middlewares/friend_middleware.js');
 const validateUpdateGroup = require('./middlewares/group_middleware.js');
 //-----------------------------------------------------------------------------------------------
 
-
-const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware (Parsing request bodies and CORS) - Cleaned up duplicates
-app.use(express.json({ limit: '100mb' })); // Combined with limit
-app.use(express.urlencoded({ limit: '100mb', extended: true })); // Combined with limit
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use(cors()); // Enable CORS for all routes
 
 // Redirect root URL to signin.html FIRST, before serving static files
@@ -267,4 +300,3 @@ app.listen(port, async () => {
     console.error("Database connection failed:", err.message);
   }
 });
-

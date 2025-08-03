@@ -1,7 +1,32 @@
-
 const eventModel = require("../../models/fengfan_folder/event_model.js");
 
-// Get events for a user
+/**
+ * @swagger
+ * /user/event/{user_id}:
+ *   get:
+ *     summary: Get all events for a user
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: List of events for the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: User ID is required
+ *       500:
+ *         description: Error fetching user events
+ */
 async function getUserEvent(req, res) {
   try {
     const { user_id } = req.params;
@@ -17,7 +42,33 @@ async function getUserEvent(req, res) {
   }
 }
 
-// Get event details by ID
+/**
+ * @swagger
+ * /event/{event_id}:
+ *   get:
+ *     summary: Get event details by event ID
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: event_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Event ID
+ *     responses:
+ *       200:
+ *         description: Event details found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Event ID is required
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         description: Error fetching event details
+ */
 async function getEventDetails(req, res) {
   try {
     const { event_id } = req.params;
@@ -37,7 +88,24 @@ async function getEventDetails(req, res) {
   }
 }
 
-// Fetch all events
+/**
+ * @swagger
+ * /getEvent:
+ *   get:
+ *     summary: Fetch all events
+ *     tags: [Events]
+ *     responses:
+ *       200:
+ *         description: List of all events
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Error fetching events
+ */
 async function fetchEvent(req, res) {
   try {
     const events = await eventModel.fetchEvents();
@@ -48,7 +116,37 @@ async function fetchEvent(req, res) {
   }
 }
 
-// Check user event registration status
+/**
+ * @swagger
+ * /events/status:
+ *   get:
+ *     summary: Check if a user is registered for a specific event
+ *     tags: [Events]
+ *     parameters:
+ *       - in: query
+ *         name: event_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Event ID
+ *       - in: query
+ *         name: user_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Registration status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Event ID and User ID are required
+ *       500:
+ *         description: Failed to check registration status
+ */
 async function checkUserEventStatus(req, res) {
   try {
     const { event_id, user_id } = req.query;
@@ -68,7 +166,43 @@ async function checkUserEventStatus(req, res) {
   }
 }
 
-// Sign up for an event
+/**
+ * @swagger
+ * /user_event:
+ *   post:
+ *     summary: Sign up for an event
+ *     tags: [Events]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - event_id
+ *               - user_id
+ *             properties:
+ *               event_id:
+ *                 type: integer
+ *               user_id:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Sign-up successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Event ID and User ID are required
+ *       500:
+ *         description: Sign-up failed
+ */
 async function signUpEvent(req, res) {
   try {
     const { event_id, user_id } = req.body;
@@ -90,7 +224,43 @@ async function signUpEvent(req, res) {
   }
 }
 
-// Cancel event registration
+/**
+ * @swagger
+ * /user_event:
+ *   delete:
+ *     summary: Cancel event registration
+ *     tags: [Events]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - event_id
+ *               - user_id
+ *             properties:
+ *               event_id:
+ *                 type: integer
+ *               user_id:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Registration cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Event ID and User ID are required
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Error cancelling registration
+ */
 async function cancelEvent(req, res) {
   try {
     const { event_id, user_id } = req.body;

@@ -2,8 +2,52 @@
 const profileModel = require("../models/profileModel");
 const userModel = require("../models/userModel"); // Added userModel import
 
+/**
+ * @swagger
+ * /profiles/check-name:
+ *   post:
+ *     summary: Check if a profile name is available
+ *     tags: [Profile]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The profile name to check
+ *     responses:
+ *       200:
+ *         description: Name is available
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 available:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       409:
+ *         description: Name is taken
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 available:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       500:
+ *         description: Internal server error during name check
+ */
 async function checkProfileName(req, res) {
-  const { name } = req.body; // 'name' is guaranteed to be valid by middleware
+  const { name } = req.body;
 
   try {
     const existingProfile = await profileModel.getProfileByName(name.trim());
@@ -18,11 +62,28 @@ async function checkProfileName(req, res) {
   }
 }
 
-// Removed createProfile as it's now handled by userController.registerUser
-
+/**
+ * @swagger
+ * /profiles/me:
+ *   get:
+ *     summary: Get the current user's profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       404:
+ *         description: Profile not found for this user
+ *       500:
+ *         description: Internal server error retrieving profile
+ */
 async function getOwnProfile(req, res) {
-  // userId should come from req.user.user_id (from JWT)
-  const user_id = req.user.user_id; // Get user_id from the authenticated user (now directly from JWT payload)
+  const user_id = req.user.user_id;
 
   try {
     const profile = await profileModel.getProfileByUserId(user_id);
@@ -36,10 +97,51 @@ async function getOwnProfile(req, res) {
   }
 }
 
+/**
+ * @swagger
+ * /profiles/me:
+ *   put:
+ *     summary: Update the current user's profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               hobbies:
+ *                 type: string
+ *               age:
+ *                 type: integer
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 profile:
+ *                   type: object
+ *       404:
+ *         description: Profile not found for this user
+ *       409:
+ *         description: The new profile name is already taken by another user
+ *       500:
+ *         description: Internal server error updating profile
+ */
 async function updateOwnProfile(req, res) {
-  // userId should come from req.user.user_id (from JWT)
-  const user_id = req.user.user_id; // Get user_id from the authenticated user (now directly from JWT payload)
-  const profileInfo = req.body; // Body contains name, hobbies, age, description
+  const user_id = req.user.user_id;
+  const profileInfo = req.body;
 
   try {
     const existingProfile = await profileModel.getProfileByUserId(user_id);
@@ -47,10 +149,8 @@ async function updateOwnProfile(req, res) {
       return res.status(404).json({ error: "Profile not found for this user." });
     }
 
-    // Check for name conflict only if name is being changed and it's not the current profile's name
     if (profileInfo.name && profileInfo.name.trim() !== existingProfile.name) {
       const nameConflict = await profileModel.getProfileByName(profileInfo.name.trim());
-      // Ensure the conflicting name doesn't belong to the current user's profile
       if (nameConflict && nameConflict.user_id !== user_id) {
         return res.status(409).json({ error: "The new profile name is already taken by another user." });
       }
@@ -64,10 +164,8 @@ async function updateOwnProfile(req, res) {
   }
 }
 
-// deleteProfile function is now handled by userController.deleteUser for full user deletion
-
 module.exports = {
   checkProfileName,
-  getOwnProfile, // Exported new function
-  updateOwnProfile, // Exported new function
+  getOwnProfile,
+  updateOwnProfile,
 };

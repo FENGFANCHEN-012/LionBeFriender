@@ -1,6 +1,23 @@
 const model = require("../models/managemed_model");
 
-
+/**
+ * @swagger
+ * /medications:
+ *   get:
+ *     summary: Get all medications
+ *     tags: [Medications]
+ *     responses:
+ *       200:
+ *         description: List of medications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Failed to fetch medications
+ */
 async function getAllMedications(req, res) {
   try {
     const meds = await model.getAllMedications();
@@ -10,6 +27,31 @@ async function getAllMedications(req, res) {
   }
 }
 
+/**
+ * @swagger
+ * /medications/{id}:
+ *   get:
+ *     summary: Get a medication by ID
+ *     tags: [Medications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Medication ID
+ *     responses:
+ *       200:
+ *         description: Medication data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Invalid ID
+ *       404:
+ *         description: Medication not found
+ */
 async function getMedicationById(req, res) {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
@@ -22,6 +64,24 @@ async function getMedicationById(req, res) {
   }
 }
 
+/**
+ * @swagger
+ * /medications:
+ *   post:
+ *     summary: Create a new medication
+ *     tags: [Medications]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       201:
+ *         description: Medication created
+ *       500:
+ *         description: Failed to create medication
+ */
 async function createMedication(req, res) {
   try {
     const med = await model.createMedication(req.body);
@@ -31,6 +91,27 @@ async function createMedication(req, res) {
   }
 }
 
+/**
+ * @swagger
+ * /medications/{id}:
+ *   delete:
+ *     summary: Delete a medication by ID
+ *     tags: [Medications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Medication ID
+ *     responses:
+ *       200:
+ *         description: Medication deleted
+ *       400:
+ *         description: Invalid ID
+ *       404:
+ *         description: Medication not found
+ */
 async function deleteMedicationById(req, res) {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
@@ -43,7 +124,24 @@ async function deleteMedicationById(req, res) {
   }
 }
 
-
+/**
+ * @swagger
+ * /medications/history:
+ *   get:
+ *     summary: Get medication intake history
+ *     tags: [Medications]
+ *     responses:
+ *       200:
+ *         description: List of medication intake logs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       500:
+ *         description: Failed to fetch medication history
+ */
 async function getMedicationHistory(req, res) {
   try {
     const history = await model.getMedicationHistory();
@@ -54,6 +152,27 @@ async function getMedicationHistory(req, res) {
   }
 }
 
+/**
+ * @swagger
+ * /medications/{id}/taken:
+ *   post:
+ *     summary: Log a medication as taken
+ *     tags: [Medications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Medication ID
+ *     responses:
+ *       200:
+ *         description: Medication marked as taken
+ *       400:
+ *         description: Invalid ID
+ *       500:
+ *         description: Failed to log medication
+ */
 async function logMedicationTaken(req, res) {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
@@ -66,7 +185,27 @@ async function logMedicationTaken(req, res) {
   }
 }
 
-
+/**
+ * @swagger
+ * /medications/{id}/mark:
+ *   post:
+ *     summary: Mark medication as taken (alternative endpoint)
+ *     tags: [Medications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Medication ID
+ *     responses:
+ *       200:
+ *         description: Marked as taken
+ *       400:
+ *         description: Invalid medication ID
+ *       500:
+ *         description: Failed to mark medication
+ */
 async function markAsTaken(req, res) {
   const id = parseInt(req.params.id);
   if (isNaN(id)) {
@@ -82,7 +221,33 @@ async function markAsTaken(req, res) {
   }
 }
 
-
+/**
+ * @swagger
+ * /medications/{id}:
+ *   put:
+ *     summary: Update a medication by ID
+ *     tags: [Medications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Medication ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Medication updated
+ *       400:
+ *         description: Invalid ID
+ *       500:
+ *         description: Update failed
+ */
 async function updateMedicationById(req, res) {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
@@ -96,25 +261,6 @@ async function updateMedicationById(req, res) {
   }
 }
 
-async function deleteMedicationById(id) {
-  const conn = await sql.connect(dbConfig);
-
-  // First delete history logs
-  await conn.request()
-    .input("id", sql.Int, id)
-    .query("DELETE FROM MedicationHistory WHERE medication_id = @id");
-
-  // Then delete medication
-  const result = await conn.request()
-    .input("id", sql.Int, id)
-    .query("DELETE FROM Medications WHERE medication_id = @id");
-
-  return result.rowsAffected[0] > 0;
-}
-
-
-
-
 module.exports = {
   getAllMedications,
   getMedicationById,
@@ -125,7 +271,3 @@ module.exports = {
   markAsTaken,
   updateMedicationById
 };
-
-
-
-

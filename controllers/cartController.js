@@ -4,6 +4,29 @@ const Cart    = require('../models/cart_model');
 const Points  = require('../models/points_model');
 const History = require('../models/history_model');
 
+/**
+ * @swagger
+ * /cart:
+ *   get:
+ *     summary: View current user's voucher cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: The user's cart.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 cart:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized.
+ */
 exports.viewCart = async (req, res, next) => {
   try {
     const cart = await Cart.getCart(req.user.user_id);
@@ -13,6 +36,36 @@ exports.viewCart = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /cart:
+ *   post:
+ *     summary: Add a voucher to the user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - voucher_id
+ *             properties:
+ *               voucher_id:
+ *                 type: integer
+ *               quantity:
+ *                 type: integer
+ *                 default: 1
+ *     responses:
+ *       201:
+ *         description: Added to cart.
+ *       400:
+ *         description: Invalid input.
+ *       401:
+ *         description: Unauthorized.
+ */
 exports.addToCart = async (req, res, next) => {
   try {
     const { voucher_id, quantity } = req.body;
@@ -23,6 +76,40 @@ exports.addToCart = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /cart/{cart_id}:
+ *   put:
+ *     summary: Edit cart item quantity
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: cart_id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The cart item ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - quantity
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Cart updated.
+ *       400:
+ *         description: Invalid input.
+ *       401:
+ *         description: Unauthorized.
+ */
 exports.editCart = async (req, res, next) => {
   try {
     const { cart_id } = req.params;
@@ -34,6 +121,27 @@ exports.editCart = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /cart/{cart_id}:
+ *   delete:
+ *     summary: Remove item from cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: cart_id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The cart item ID
+ *     responses:
+ *       200:
+ *         description: Removed from cart.
+ *       401:
+ *         description: Unauthorized.
+ */
 exports.removeFromCart = async (req, res, next) => {
   try {
     await Cart.removeItem(req.params.cart_id);
@@ -43,6 +151,31 @@ exports.removeFromCart = async (req, res, next) => {
   }
 };
 
+/**
+ * @swagger
+ * /cart/checkout:
+ *   post:
+ *     summary: Checkout and redeem vouchers in the user's cart
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Checkout successful.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                 totalCost:
+ *                   type: integer
+ *       401:
+ *         description: Unauthorized.
+ *       500:
+ *         description: Server error.
+ */
 exports.checkout = async (req, res, next) => {
   let pool;
   try {
