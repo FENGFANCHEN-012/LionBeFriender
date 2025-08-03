@@ -1,0 +1,221 @@
+const request = require('supertest');
+const app = require('../../../app.js'); // Adjust path as needed
+const eventModel = require("../../../models/fengfan_folder/event_model.js");
+const EventController = require("../../../controllers/fengfan_folder/event_controller.js");
+
+// Mock the event model
+jest.mock("../../../models/fengfan_folder/event_model.js");
+
+describe('Event Controller', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('getUserEvent', () => {
+    it('should return user events with valid user_id', async () => {
+      const mockEvents = [{ id: 1, name: 'Test Event' }];
+      eventModel.getUserEvent.mockResolvedValue(mockEvents);
+
+      const res = await request(app)
+        .get('/user/event/123')
+        .expect(200);
+
+      expect(res.body).toEqual(mockEvents);
+      expect(eventModel.getUserEvent).toHaveBeenCalledWith(123);
+    });
+
+    it('should return 400 when user_id is missing', async () => {
+      const res = await request(app)
+        .get('/user/event/')
+        .expect(400);
+
+      expect(res.body.error).toBe('User ID is required');
+    });
+
+    it('should return 500 when model throws error', async () => {
+      eventModel.getUserEvent.mockRejectedValue(new Error('Database error'));
+
+      const res = await request(app)
+        .get('/user/event/123')
+        .expect(500);
+
+      expect(res.body.error).toBe('Error fetching user events');
+    });
+  });
+
+  describe('getEventDetails', () => {
+    it('should return event details with valid event_id', async () => {
+      const mockEvent = { id: 1, name: 'Test Event' };
+      eventModel.getEventDetails.mockResolvedValue(mockEvent);
+
+      const res = await request(app)
+        .get('/event/1')
+        .expect(200);
+
+      expect(res.body).toEqual(mockEvent);
+      expect(eventModel.getEventDetails).toHaveBeenCalledWith(1);
+    });
+
+    it('should return 404 when event not found', async () => {
+      eventModel.getEventDetails.mockResolvedValue(null);
+
+      const res = await request(app)
+        .get('/event/999')
+        .expect(404);
+
+      expect(res.body.error).toBe('Event not found');
+    });
+
+    it('should return 400 when event_id is missing', async () => {
+      const res = await request(app)
+        .get('/event/')
+        .expect(400);
+
+      expect(res.body.error).toBe('Event ID is required');
+    });
+  });
+
+  describe('fetchEvent', () => {
+    it('should return all events', async () => {
+      const mockEvents = [{ id: 1 }, { id: 2 }];
+      eventModel.fetchEvents.mockResolvedValue(mockEvents);
+
+      const res = await request(app)
+        .get('/getEvent')
+        .expect(200);
+
+      expect(res.body).toEqual(mockEvents);
+    });
+
+    it('should return 500 when model throws error', async () => {
+      eventModel.fetchEvents.mockRejectedValue(new Error('Database error'));
+
+      const res = await request(app)
+        .get('/getEvent')
+        .expect(500);
+
+      expect(res.body.error).toBe('Error fetching events');
+    });
+  });
+
+  describe('checkUserEventStatus', () => {
+    it('should return status with valid parameters', async () => {
+      const mockStatus = { exists: true, status: 'registered' };
+      eventModel.checkUserEventStatus.mockResolvedValue(mockStatus);
+
+      const res = await request(app)
+        .get('/events/status?event_id=1&user_id=123')
+        .expect(200);
+
+      expect(res.body).toEqual(mockStatus);
+      expect(eventModel.checkUserEventStatus).toHaveBeenCalledWith(123, 1);
+    });
+
+    it('should return 400 when parameters are missing', async () => {
+      const res = await request(app)
+        .get('/events/status?event_id=1')
+        .expect(400);
+
+      expect(res.body.error).toBe('Event ID and User ID are required');
+    });
+
+    it('should handle errors gracefully', async () => {
+      eventModel.checkUserEventStatus.mockRejectedValue(new Error('Database error'));
+
+      const res = await request(app)
+        .get('/events/status?event_id=1&user_id=123')
+        .expect(500);
+
+      expect(res.body).toEqual({
+        exists: false,
+        status: null,
+        error: "Failed to check registration status"
+      });
+    });
+  });
+
+  describe('signUpEvent', () => {
+    it('should sign up user successfully', async () => {
+      eventModel.signUpEvent.mockResolvedValue();
+
+      const res = await request(app)
+        .post('/user_event')
+        .send({ event_id: 1, user_id: 123 })
+        .expect(200);
+
+      expect(res.body).toEqual({
+        success: true,
+        message: "Sign-up successful"
+      });
+      expect(eventModel.signUpEvent).toHaveBeenCalledWith(1, 123);
+    });
+
+    it('should return 400 when parameters are missing', async () => {
+      const res = await request(app)
+        .post('/user_event')
+        .send({ event_id: 1 })
+        .expect(400);
+
+      expect(res.body.error).toBe('Event ID and User ID are required');
+    });
+
+    it('should handle signup errors', async () => {
+      eventModel.signUpEvent.mockRejectedValue(new Error('Event full'));
+
+      const res = await request(app)
+        .post('/user_event')
+        .send({ event_id: 1, user_id: 123 })
+        .expect(400);
+
+      expect(res.body).toEqual({
+        success: false,
+        error: "Event full"
+      });
+    });
+  });
+
+  describe('cancelEvent', () => {
+    it('should cancel registration successfully', async () => {
+      eventModel.cancelEvent.mockResolvedValue({ success: true, message: 'Cancelled' });
+
+      const res = await request(app)
+        .delete('/user_event')
+        .send({ event_id: 1, user_id: 123 })
+        .expect(200);
+
+      expect(res.body.message).toBe('Cancelled');
+      expect(eventModel.cancelEvent).toHaveBeenCalledWith(1, 123);
+    });
+
+    it('should return 404 when registration not found', async () => {
+      eventModel.cancelEvent.mockResolvedValue({ success: false, message: 'Not found' });
+
+      const res = await request(app)
+        .delete('/user_event')
+        .send({ event_id: 1, user_id: 123 })
+        .expect(404);
+
+      expect(res.body.error).toBe('Not found');
+    });
+
+    it('should return 400 when parameters are missing', async () => {
+      const res = await request(app)
+        .delete('/user_event')
+        .send({ user_id: 123 })
+        .expect(400);
+
+      expect(res.body.error).toBe('Event ID and User ID are required');
+    });
+
+    it('should handle cancellation errors', async () => {
+      eventModel.cancelEvent.mockRejectedValue(new Error('Database error'));
+
+      const res = await request(app)
+        .delete('/user_event')
+        .send({ event_id: 1, user_id: 123 })
+        .expect(500);
+
+      expect(res.body.error).toBe('Error cancelling registration');
+    });
+  });
+});
