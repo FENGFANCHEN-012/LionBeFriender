@@ -8,21 +8,21 @@ DECLARE @fk_sql NVARCHAR(MAX) = N'';
 SELECT @fk_sql += 'ALTER TABLE [' + SCHEMA_NAME(t.schema_id) + '].[' + t.name + '] DROP CONSTRAINT [' + fk.name + '];'
 FROM sys.foreign_keys fk
 INNER JOIN sys.tables t ON fk.parent_object_id = t.object_id;
-EXEC sp_executesql @fk_sql;
+IF LEN(@fk_sql) > 0 EXEC sp_executesql @fk_sql;
 
 /******************************************************************************
-* 2. Drop ALL Tables (order doesn¡¯t matter now)
+* 2. Drop ALL Tables (order doesn’t matter now)
 ******************************************************************************/
 DECLARE @tbl_sql NVARCHAR(MAX) = N'';
 SELECT @tbl_sql += 'DROP TABLE IF EXISTS [' + SCHEMA_NAME(schema_id) + '].[' + name + '];'
 FROM sys.tables;
-EXEC sp_executesql @tbl_sql;
+IF LEN(@tbl_sql) > 0 EXEC sp_executesql @tbl_sql;
 
 /******************************************************************************
-* 3. Recreate Tables (exactly as you provided)
+* 3. Recreate ALL Tables (latest structure)
 ******************************************************************************/
 
--- Users Table
+/* --- Users Table --- */
 CREATE TABLE Users (
     user_id INT PRIMARY KEY IDENTITY(1,1),
     username NVARCHAR(50) NOT NULL UNIQUE,
@@ -31,7 +31,7 @@ CREATE TABLE Users (
     role NVARCHAR(20) NOT NULL CHECK (role IN ('member', 'admin'))
 );
 
--- Profiles Table
+/* --- Profiles Table --- */
 CREATE TABLE Profiles (
     profile_id INT IDENTITY(1,1) PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
@@ -40,27 +40,24 @@ CREATE TABLE Profiles (
     age INT,
     description NVARCHAR(MAX),
     created_at DATETIME DEFAULT GETDATE(),
-    updated_at DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    updated_at DATETIME DEFAULT GETDATE()
 );
 
-
-
--- RevokedTokens Table
+/* --- RevokedTokens Table --- */
 CREATE TABLE RevokedTokens (
     token_id NVARCHAR(255) PRIMARY KEY,
     expiration_date DATETIME NOT NULL,
     revoked_at DATETIME DEFAULT GETDATE()
 );
 
--- user_points Table
+/* --- user_points Table --- */
 CREATE TABLE user_points (
     user_id INT NOT NULL PRIMARY KEY,
     points INT NOT NULL DEFAULT 0,
     updated_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- vouchers Table
+/* --- vouchers Table --- */
 CREATE TABLE vouchers (
     voucher_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     title NVARCHAR(100) NOT NULL,
@@ -69,7 +66,7 @@ CREATE TABLE vouchers (
     created_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- voucher_cart Table
+/* --- voucher_cart Table --- */
 CREATE TABLE voucher_cart (
     cart_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -78,7 +75,7 @@ CREATE TABLE voucher_cart (
     added_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- user_vouchers Table
+/* --- user_vouchers Table --- */
 CREATE TABLE user_vouchers (
     id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -87,7 +84,7 @@ CREATE TABLE user_vouchers (
     redeemed_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- user_voucher_history Table
+/* --- user_voucher_history Table --- */
 CREATE TABLE user_voucher_history (
     history_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -97,7 +94,7 @@ CREATE TABLE user_voucher_history (
     redeemed_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- video_tasks Table
+/* --- video_tasks Table --- */
 CREATE TABLE video_tasks (
     task_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     title NVARCHAR(150) NOT NULL,
@@ -108,7 +105,7 @@ CREATE TABLE video_tasks (
     created_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- video_watches Table
+/* --- video_watches Table --- */
 CREATE TABLE video_watches (
     watch_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -116,7 +113,7 @@ CREATE TABLE video_watches (
     watched_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- Medications Table
+/* --- Medications Table --- */
 CREATE TABLE Medications (
     medication_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -125,17 +122,18 @@ CREATE TABLE Medications (
     instructions NVARCHAR(255),
     time VARCHAR(20) NOT NULL,
     start_date DATE NOT NULL,
-    end_date DATE
+    end_date DATE,
+    created_at DATETIME NOT NULL DEFAULT GETDATE()
 );
 
--- MedicationHistory Table
+/* --- MedicationHistory Table --- */
 CREATE TABLE MedicationHistory (
     history_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     medication_id INT NOT NULL,
     taken_at DATETIME NOT NULL
 );
 
--- UserFriends Table
+/* --- UserFriends Table (UPDATED) --- */
 CREATE TABLE UserFriends (
     user_id INT NOT NULL,
     friend_id INT NOT NULL,
@@ -146,26 +144,26 @@ CREATE TABLE UserFriends (
     PRIMARY KEY (user_id, friend_id)
 );
 
--- Event Table
+/* --- Event Table (UPDATED) --- */
 CREATE TABLE Event (
-
-   event_id INT IDENTITY(1,1) PRIMARY KEY,  
-   external_id VARCHAR(255) UNIQUE ,
+    event_id INT IDENTITY(1,1) PRIMARY KEY,
+    external_id VARCHAR(255) UNIQUE,
     name VARCHAR(255) NOT NULL,
     location VARCHAR(255),
-    time DATETIME,                      
+    time DATETIME,
     description TEXT,
-    image NVARCHAR(MAX),       
-	 start DATETIME NOT NULL,
+    image NVARCHAR(MAX),
+    start DATETIME NOT NULL,
     [end] DATETIME NOT NULL,
     url NVARCHAR(255),
     status NVARCHAR(50) NOT NULL,
-    fee VARCHAR(50),                 
-    type VARCHAR(100),  
-   
+    fee VARCHAR(50),
+    type VARCHAR(100),
+    detail VARCHAR(100),
+    photo TEXT
 );
 
--- event_signup Table
+/* --- event_signup Table --- */
 CREATE TABLE event_signup (
     user_id INT NOT NULL,
     event_id INT NOT NULL,
@@ -173,7 +171,7 @@ CREATE TABLE event_signup (
     PRIMARY KEY (user_id, event_id)
 );
 
--- Groups Table
+/* --- Groups Table --- */
 CREATE TABLE Groups (
     group_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     name NVARCHAR(100) NOT NULL,
@@ -186,7 +184,7 @@ CREATE TABLE Groups (
     last_activity DATETIME2(0) NULL
 );
 
--- GroupMembers Table
+/* --- GroupMembers Table --- */
 CREATE TABLE GroupMembers (
     group_id INT NOT NULL,
     user_id INT NOT NULL,
@@ -197,7 +195,7 @@ CREATE TABLE GroupMembers (
     PRIMARY KEY (group_id, user_id)
 );
 
--- GroupAnnouncements Table
+/* --- GroupAnnouncements Table --- */
 CREATE TABLE GroupAnnouncements (
     announcement_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     group_id INT NOT NULL,
@@ -208,7 +206,7 @@ CREATE TABLE GroupAnnouncements (
     is_pinned BIT DEFAULT 0 NOT NULL
 );
 
--- MailBox Table
+/* --- MailBox Table --- */
 CREATE TABLE MailBox (
     mail_box_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -216,7 +214,7 @@ CREATE TABLE MailBox (
     receive_date DATETIME DEFAULT GETDATE()
 );
 
--- PrivateChats Table
+/* --- PrivateChats Table --- */
 CREATE TABLE PrivateChats (
     chat_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     sender_id INT NOT NULL,
@@ -225,7 +223,7 @@ CREATE TABLE PrivateChats (
     sent_at DATETIME DEFAULT GETDATE()
 );
 
--- GroupChats Table
+/* --- GroupChats Table --- */
 CREATE TABLE GroupChats (
     chat_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     group_id INT NOT NULL,
@@ -234,21 +232,21 @@ CREATE TABLE GroupChats (
     sent_at DATETIME DEFAULT GETDATE()
 );
 
--- food_items Table
+/* --- food_items Table --- */
 CREATE TABLE food_items (
     food_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     food_name NVARCHAR(100) NULL,
     calories_per_unit INT NULL
 );
 
--- recommended_calories Table
+/* --- recommended_calories Table --- */
 CREATE TABLE recommended_calories (
     age_min INT NULL,
     age_max INT NULL,
     recommended_calories INT NULL
 );
 
--- daily_calorie_intake Table
+/* --- daily_calorie_intake Table --- */
 CREATE TABLE daily_calorie_intake (
     intake_id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NULL,
@@ -260,7 +258,7 @@ CREATE TABLE daily_calorie_intake (
     [time] TIME(7) NULL
 );
 
--- WeatherAlerts Table
+/* --- WeatherAlerts Table --- */
 CREATE TABLE WeatherAlerts(
     id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     user_id INT NULL,
@@ -269,7 +267,9 @@ CREATE TABLE WeatherAlerts(
     created_at DATETIME NULL DEFAULT GETDATE()
 );
 
--- (Foreign Keys: run separately for clarity)
+/******************************************************************************
+* 4. Re-Add Foreign Keys
+******************************************************************************/
 ALTER TABLE Profiles ADD FOREIGN KEY (user_id) REFERENCES Users(user_id);
 ALTER TABLE user_points ADD FOREIGN KEY(user_id) REFERENCES Users(user_id);
 ALTER TABLE voucher_cart ADD FOREIGN KEY(user_id) REFERENCES Users(user_id);
@@ -299,19 +299,21 @@ ALTER TABLE GroupChats ADD FOREIGN KEY (sender_id) REFERENCES Users(user_id);
 ALTER TABLE daily_calorie_intake ADD FOREIGN KEY(food_id) REFERENCES food_items(food_id);
 ALTER TABLE daily_calorie_intake ADD FOREIGN KEY(user_id) REFERENCES Users(user_id);
 
--- Test data:
--- a) sample vouchers
+/******************************************************************************
+* 5. Seed Data for Test (Optional)
+******************************************************************************/
+-- Sample vouchers
 INSERT INTO vouchers (title, description, cost_points) VALUES
   ('Fairprice voucher 15$', 'Use at supporting establishments', 1500),
   ('Fairprice voucher 20$', 'Use at supporting establishments', 2000);
 
--- b) sample video-tasks with updated YouTube IDs
+-- Sample video tasks
 INSERT INTO video_tasks (title, description, youtube_id, point_value, category) VALUES
-  ('Healthy Habits Intro', 'Learn quick healthy habits.', 'QC8iQqtG0hg', 50, 'Daily Learning'),
-  ('Active Aging Tips', 'Stay active as you age.', 'NCvEggpKA9E', 75, 'Daily Exercise'),
-  ('Mindful Breathing', 'Short mindfulness exercise.', 'z-3n5iBi4u0', 100, 'Daily Mindfulness');
+  ('Healthy Habits Intro', 'Learn quick healthy habits.', 'QC8iQqtG0hg', 5000, 'Daily Learning'),
+  ('Active Aging Tips', 'Stay active as you age.', 'NCvEggpKA9E', 5000, 'Daily Exercise'),
+  ('Mindful Breathing', 'Short mindfulness exercise.', 'z-3n5iBi4u0', 5000, 'Daily Mindfulness');
 
--- c) food_items sample data
+-- Food items
 SET IDENTITY_INSERT [dbo].[food_items] ON;
 INSERT [dbo].[food_items] ([food_id], [food_name], [calories_per_unit]) VALUES (1, N'Char Kway Teow', 412);
 INSERT [dbo].[food_items] ([food_id], [food_name], [calories_per_unit]) VALUES (2, N'Chicken Rice', 500);
@@ -319,12 +321,12 @@ INSERT [dbo].[food_items] ([food_id], [food_name], [calories_per_unit]) VALUES (
 INSERT [dbo].[food_items] ([food_id], [food_name], [calories_per_unit]) VALUES (4, N'Char Kway Teow', 412);
 SET IDENTITY_INSERT [dbo].[food_items] OFF;
 
--- d) recommended_calories sample data
+-- Recommended calories
 INSERT [dbo].[recommended_calories] ([age_min], [age_max], [recommended_calories]) VALUES (70, 79, 1600);
 INSERT [dbo].[recommended_calories] ([age_min], [age_max], [recommended_calories]) VALUES (60, 69, 2000);
 
 /******************************************************************************
-* 5. (Admin table, permissions etc. -- LEAVE IN COMMENTS)
+* 6. (Admin table, permissions etc. -- LEAVE IN COMMENTS)
 ******************************************************************************/
 --USE bed_AssignmentTestingDB
 --INSERT INTO Users (username, email, passwordHash, role)
